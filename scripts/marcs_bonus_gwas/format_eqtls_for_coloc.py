@@ -12,7 +12,7 @@ for typ in types:
         with gzip.open("/users/mgloud/projects/ipsc/data/Input/{1}/full_qtl_results_{0}.Pval-rescaled.txt.gz".format(i, typ)) as f:
             with open("/users/mgloud/projects/ipsc/data/Input/{1}/full_qtl_results_formatted.txt".format(i, typ), "a") as a:
                 if i == 1:
-                    a.write(f.readline().strip())
+                    a.write(f.readline())
                 else:
                     f.readline()
                 all_sites = []
@@ -36,7 +36,7 @@ for typ in ["GeneLevel"]:
         with gzip.open("/users/mgloud/projects/ipsc/data/Input/{1}/full_qtl_results_{0}.txt.gz".format(i, typ)) as f:
             with open("/users/mgloud/projects/ipsc/data/Input/{1}/full_qtl_results_formatted.txt".format(i, typ), "a") as a:
                 if i == 1:
-                    a.write(f.readline().strip())
+                    a.write(f.readline())
                 else:
                     f.readline()
                 all_sites = []

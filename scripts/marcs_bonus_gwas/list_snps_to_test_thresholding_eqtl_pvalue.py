@@ -28,35 +28,73 @@ phenos = ["/users/mgloud/projects/ipsc/data/Input/ApaLevel/full_qtl_results_form
         "/users/mgloud/projects/ipsc/data/Input/TranscriptRatio/full_qtl_results_formatted.txt.gz"]
 
 def main():
+
+    cutoffs = get_fdr_cutoffs(phenos)
+
     files = glob.glob("/users/mgloud/projects/ipsc/data/marcs_gwas_files/reformatted/GWAS_Catalog/*.gz")
     files += glob.glob("/users/mgloud/projects/ipsc/data/marcs_gwas_files/reformatted/PhenomeScanner/*.gz")
 
-    with open("/users/mgloud/projects/ipsc/output/snps_to_test_marcs_bonus.txt", "w") as w:
-
-        w.write("chr\tsnp_pos\tgwas_file\teqtl_file\ttrait\tgwas_pvalue\teqtl_zscore\tgene\n")
+    # Write headers for each file
+    with open("/users/mgloud/projects/ipsc/output/snps_to_test_marcs_bonus_fdr05_window1.txt", "w") as w:
+        w.write("chr\tsnp_pos\tgwas_file\teqtl_file\ttrait\tgwas_pvalue\teqtl_pvalue\tgene\n")
+        w.flush()
+    with open("/users/mgloud/projects/ipsc/output/snps_to_test_marcs_bonus_fdr05_window10000.txt", "w") as w:
+        w.write("chr\tsnp_pos\tgwas_file\teqtl_file\ttrait\tgwas_pvalue\teqtl_pvalue\tgene\n")
+        w.flush()
+    with open("/users/mgloud/projects/ipsc/output/snps_to_test_marcs_bonus_fdr01_window1.txt", "w") as w:
+        w.write("chr\tsnp_pos\tgwas_file\teqtl_file\ttrait\tgwas_pvalue\teqtl_pvalue\tgene\n")
+        w.flush()
+    with open("/users/mgloud/projects/ipsc/output/snps_to_test_marcs_bonus_fdr01_window10000.txt", "w") as w:
+        w.write("chr\tsnp_pos\tgwas_file\teqtl_file\ttrait\tgwas_pvalue\teqtl_pvalue\tgene\n")
         w.flush()
 
-        for file in sorted(files):
+    for file in sorted(files):
 
-            info = snps_by_threshold(file, 5e-8, file)
+        info = snps_by_threshold(file, 5e-8, file)
 
-            for snp in info:
-                print snp
+        for snp in info:
+            print snp
 
-                for pheno in phenos:
-                  
-                    # Look up this SNP in this tissue to see if it's any good
-                    matches = subprocess.check_output("tabix {0} {1}:{2}-{2}".format(pheno, snp[0], snp[1]), shell=True)
-                    if matches == "":
-                        continue
-                    matches = matches.strip().split("\n")
+            for pheno in phenos:
+              
+                # Look up this SNP in this tissue to see if it's any good
+                matches = subprocess.check_output("tabix {0} {1}:{2}-{2}".format(pheno, snp[0], snp[1]), shell=True)
+                if matches == "":
+                    continue
+                matches = matches.strip().split("\n")
 
-                    for match in matches:
-                        data = match.strip().split("\t")
-                        # Arbitrarily chosen for now, to get a sense of what we're looking at
-                        if abs(float(data[3]) / float(data[4])) > 5:
-                            w.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\n".format(snp[0], snp[1], file, pheno, snp[3], snp[2], abs(float(data[3]) / float(data[4])), data[0]))
-                            w.flush()
+                wide_matches = subprocess.check_output("tabix {0} {1}:{2}-{3}".format(pheno, snp[0], snp[1]-10000, snp[1]+10000), shell=True)
+                wide_matches = wide_matches.strip().split("\n")
+
+                matched_05 = set([])     # Don't print repeats if there are multiple matches
+                matched_01 = set([])     # Don't print repeats if there are multiple matches
+                for match in matches:
+                    data = match.strip().split("\t")
+
+                    if float(data[7]) <= cutoffs[0][pheno] and data[0] not in matched_05:
+                        with open("/users/mgloud/projects/ipsc/output/snps_to_test_marcs_bonus_fdr05_window1.txt", "a") as a:
+                            a.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\n".format(snp[0], snp[1], file, pheno, snp[3], snp[2], data[7], data[0]))
+                            matched_05.add(data[0])
+
+                    if float(data[7]) <= cutoffs[1][pheno] and data[0] not in matched_01:
+                        with open("/users/mgloud/projects/ipsc/output/snps_to_test_marcs_bonus_fdr01_window1.txt", "a") as a:
+                            a.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\n".format(snp[0], snp[1], file, pheno, snp[3], snp[2], data[7], data[0]))
+                            matched_01.add(data[0])
+ 
+                matched_05 = set([])     # Don't print repeats if there are multiple matches
+                matched_01 = set([])     # Don't print repeats if there are multiple matches
+                for match in wide_matches:
+                    data = match.strip().split("\t")
+
+                    if float(data[7]) <= cutoffs[0][pheno] and data[0] not in matched_05:
+                        with open("/users/mgloud/projects/ipsc/output/snps_to_test_marcs_bonus_fdr05_window10000.txt", "a") as a:
+                            a.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\n".format(snp[0], snp[1], file, pheno, snp[3], snp[2], data[7], data[0]))
+                            matched_05.add(data[0])
+
+                    if float(data[7]) <= cutoffs[1][pheno] and data[0] not in matched_01:
+                        with open("/users/mgloud/projects/ipsc/output/snps_to_test_marcs_bonus_fdr01_window10000.txt", "a") as a:
+                            a.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\n".format(snp[0], snp[1], file, pheno, snp[3], snp[2], data[7], data[0]))
+                            matched_01.add(data[0])
 
 
 def snps_by_threshold(gwas_file, gwas_threshold, trait, window=1000000):
@@ -125,6 +163,20 @@ def snps_by_threshold(gwas_file, gwas_threshold, trait, window=1000000):
             snps_to_test.append(snp)
             
     return(snps_to_test)
-        
+
+def get_fdr_cutoffs(pheno_files):
+
+    perc_5_cutoffs = {}
+    perc_1_cutoffs = {}
+
+    for filename in pheno_files:
+        fdr_file = "/".join(filename.split("/")[:-1] + ["PvalueThresholds.txt"])
+
+        with open(fdr_file) as f:
+           perc_5_cutoffs[filename] = float(f.readline().strip().split()[2])
+           perc_1_cutoffs[filename] = float(f.readline().strip().split()[2])
+
+    return (perc_5_cutoffs, perc_1_cutoffs)
+            
 if __name__ == "__main__":
     main()
