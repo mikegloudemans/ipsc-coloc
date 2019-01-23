@@ -9,7 +9,7 @@ def main():
     subprocess.call("rm -rf /users/mgloud/projects/brain_gwas/output/ipsc-ukbb-tests/*", shell=True)
 
     kept_data = []
-    with open("/users/mgloud/projects/ipsc/output/ukbb_snps_to_test.txt") as f:
+    with open("/users/mgloud/projects/ipsc/output/snps_to_test_marcs_ukbb_fdr05_window10000.txt") as f:
         all_data = []
         f.readline()
         for line in f:
@@ -32,7 +32,7 @@ def main():
             w.write("{0}\t{1}\t{2}\n".format(test[0], test[1], test[7]))
                
         # Add corresponding gwas experiment to the list, if not already present
-        temp["gwas_experiments"][test[2]] = {"ref": "1kgenomes", "gwas_format": "effect_size", "ref_allele_header": "a1", "alt_allele_header": "a2"}
+        temp["gwas_experiments"][test[2]] = {"ref": "1kgenomes", "gwas_format": "effect_size"}
         if test[2] != test[4]:
             temp["gwas_experiments"][test[2]]["traits"] = [test[4]]
 
@@ -46,7 +46,7 @@ def main():
         # Run the test
         subprocess.call("python /users/mgloud/projects/brain_gwas/scripts/dispatch.py /users/mgloud/projects/ipsc/tmp/ipsc_config{0}.config 1 &".format(i), shell=True)
 
-        while int(subprocess.check_output('''ps -ef | grep "python /users/mgloud/projects/brain_gwas/scripts/dispatch.py /users/mgloud/projects/ipsc/tmp/ipsc_config" | wc -l''', shell=True)) > 7:
+        while int(subprocess.check_output('''ps -ef | grep "python /users/mgloud/projects/brain_gwas/scripts/dispatch.py /users/mgloud/projects/ipsc/tmp/ipsc_config" | wc -l''', shell=True)) > 8:
             time.sleep(5)
 
 template = '''

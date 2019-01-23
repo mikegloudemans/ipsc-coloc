@@ -21,34 +21,43 @@ else:
 
 from scipy import stats
 
+phenos = ["/users/mgloud/projects/ipsc/data/Input/ApaLevel/full_qtl_results_formatted.txt.gz",
+        "/users/mgloud/projects/ipsc/data/Input/GeneLevel/full_qtl_results_formatted.txt.gz",
+        "/users/mgloud/projects/ipsc/data/Input/ExonLevel/full_qtl_results_formatted.txt.gz",
+        "/users/mgloud/projects/ipsc/data/Input/SplicingLevel/full_qtl_results_formatted.txt.gz",
+        "/users/mgloud/projects/ipsc/data/Input/TranscriptRatio/full_qtl_results_formatted.txt.gz"]
+
 def main():
 
-    # First, load names and genomic locations of all significant features
-    sig_features = load_significant_features()
+    cutoffs = get_fdr_cutoffs(phenos)
+    
+    files = glob.glob("/mnt/lab_data/montgomery/mgloud/gwas/data/munged/*.gz")
 
-    files = glob.glob("/users/mgloud/projects/ipsc/data/marcs_gwas_files/reformatted/GWAS_Catalog/*.gz")
-    files += glob.glob("/users/mgloud/projects/ipsc/data/marcs_gwas_files/reformatted/PhenomeScanner/*.gz")
+    # Write header
+    with open("/users/mgloud/projects/ipsc/output/snps_to_test_locuscompare_fdr05_window10000.txt", "w") as w:
+        w.write("chr\tsnp_pos\tgwas_file\teqtl_file\ttrait\tgwas_pvalue\teqtl_pvalue\tgene\n")
 
-    with open("/users/mgloud/projects/ipsc/output/snps_to_test_marcs_bonus.txt", "w") as w:
+    for file in sorted(files):
 
-        w.write("chr\tsnp_pos\tgwas_file\teqtl_file\ttrait\tgwas_pvalue\tfeature\n")
-        w.flush()
+        info = snps_by_threshold(file, 5e-8, file)
 
-        for file in sorted(files):
+        for snp in info:
+            print snp
 
-            info = snps_by_threshold(file, 5e-8, file)
-
-            for snp in info:
-
-                if snp[0] not in sig_features:
+            for pheno in phenos:
+              
+                wide_matches = subprocess.check_output("tabix {0} {1}:{2}-{3}".format(pheno, snp[0], snp[1]-10000, snp[1]+10000), shell=True)
+                if wide_matches.strip() == "":
                     continue
-                print snp
-                for feat in sig_features[snp[0]]:
+                wide_matches = wide_matches.strip().split("\n")
 
-                    if snp[1] <= feat[2] + 500000 and snp[1] >= feat[1] - 500000:
-                        w.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\n".format(snp[0], snp[1], file, feat[3], snp[3], snp[2], feat[0]))
-                        w.flush()
-
+                matched_05 = set([])     # Don't print repeats if there are multiple matches
+                for match in wide_matches:
+                    data = match.strip().split("\t")
+                    if float(data[7]) <= cutoffs[0][pheno] and data[0] not in matched_05:
+                        with open("/users/mgloud/projects/ipsc/output/snps_to_test_locuscompare_fdr05_window10000.txt", "a") as a:
+                            a.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\n".format(snp[0], snp[1], file, pheno, snp[3], snp[2], data[7], data[0]))
+                            matched_05.add(data[0])
 
 def snps_by_threshold(gwas_file, gwas_threshold, trait, window=1000000):
 
@@ -117,37 +126,21 @@ def snps_by_threshold(gwas_file, gwas_threshold, trait, window=1000000):
             
     return(snps_to_test)
 
-def load_all_features(filename):
-    all_features = {}
-    with open(filename) as f:
-        f.readline()
-        for line in f:
-            data = line.strip().split()
-            all_features[data[0]] = (data[1], float(data[2]), float(data[3]))
+def get_fdr_cutoffs(pheno_files):
 
-    return all_features
+    perc_5_cutoffs = {}
+    perc_1_cutoffs = {}
 
-def load_significant_features():
-    sig_files = [("/users/mgloud/projects/ipsc/data/Input/apa_affectedFeatures.txt", "/users/mgloud/projects/ipsc/data/Input/ApaLevel/APA_QTL_annot.txt"),
-                ("/users/mgloud/projects/ipsc/data/Input/exon_affectedFeatures.txt", "/users/mgloud/projects/ipsc/data/Input/ExonLevel/Exons_mapping.txt"),
-                ("/users/mgloud/projects/ipsc/data/Input/gene_affectedFeatures.txt", "/users/mgloud/projects/ipsc/data/Input/GeneLevel/Annotation_FC_Gene.txt"),
-                ("/users/mgloud/projects/ipsc/data/Input/Splicing_affectedFeatures.txt", "/users/mgloud/projects/ipsc/data/Input/SplicingLevel/SplicingFractionMatrixMapping.txt"),
-                ("/users/mgloud/projects/ipsc/data/Input/transcript_affectedFeatures.txt", "/users/mgloud/projects/ipsc/data/Input/TranscriptRatio/TranscriptMapping.txt")]
+    for filename in pheno_files:
+        fdr_file = "/".join(filename.split("/")[:-1] + ["PvalueThresholds.txt"])
 
-    sig_features = {}
-    for sf in sig_files:
-        all_features = load_all_features(sf[1])
-        with open(sf[0]) as f:
-            f.readline()
-            for line in f:
-                feat = all_features[line.strip()]
-                if str(feat[0]) not in sig_features:
-                    sig_features[str(feat[0])] = []
-                sig_features[str(feat[0])].append((line.strip(), feat[1], feat[2], sf[1]))
+        with open(fdr_file) as f:
+           perc_5_cutoffs[filename] = float(f.readline().strip().split()[2])
+           perc_1_cutoffs[filename] = float(f.readline().strip().split()[2])
 
-    return sig_features
-
-
-        
+    return (perc_5_cutoffs, perc_1_cutoffs)
+            
 if __name__ == "__main__":
     main()
+                
+

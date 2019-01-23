@@ -6,10 +6,10 @@ import time
 
 def main():
     # Reset things fresh on each run, so we're not mixing results
-    subprocess.call("rm -rf /users/mgloud/projects/brain_gwas/output/ipsc-tests/*", shell=True)
+    subprocess.call("rm -rf /users/mgloud/projects/brain_gwas/output/ipsc-locuscompare-tests/*", shell=True)
 
     kept_data = []
-    with open("/users/mgloud/projects/ipsc/output/snps_to_test.txt") as f:
+    with open("/users/mgloud/projects/ipsc/output/snps_to_test_marcs_locuscompare_fdr05_window10000.txt") as f:
         all_data = []
         f.readline()
         for line in f:
@@ -21,13 +21,9 @@ def main():
     # Then for every locus in the "kept data"...
     for i in range(len(kept_data)):
 
-
         test = kept_data[i]
         print test
         
-        if test[2].split("/")[-1] in ["GWAS_Adiponectin_Dastani_2012.txt.gz"]:
-            continue
-
         temp = json.loads(template)
         temp["snp_list_file"] = "/users/mgloud/projects/ipsc/tmp/snp_list{0}.txt".format(i)
 
@@ -36,7 +32,7 @@ def main():
             w.write("{0}\t{1}\t{2}\n".format(test[0], test[1], test[7]))
                
         # Add corresponding gwas experiment to the list, if not already present
-        temp["gwas_experiments"][test[2]] = {"ref": "1kgenomes", "gwas_format": "pval_only"}
+        temp["gwas_experiments"][test[2]] = {"ref": "1kgenomes", "gwas_format": "effect_size"}
         if test[2] != test[4]:
             temp["gwas_experiments"][test[2]]["traits"] = [test[4]]
 
@@ -50,12 +46,12 @@ def main():
         # Run the test
         subprocess.call("python /users/mgloud/projects/brain_gwas/scripts/dispatch.py /users/mgloud/projects/ipsc/tmp/ipsc_config{0}.config 1 &".format(i), shell=True)
 
-        while int(subprocess.check_output('''ps -ef | grep "python /users/mgloud/projects/brain_gwas/scripts/dispatch.py /users/mgloud/projects/ipsc/tmp/ipsc_config" | wc -l''', shell=True)) > 7:
+        while int(subprocess.check_output('''ps -ef | grep "python /users/mgloud/projects/brain_gwas/scripts/dispatch.py /users/mgloud/projects/ipsc/tmp/ipsc_config" | wc -l''', shell=True)) > 8:
             time.sleep(5)
 
 template = '''
 {
-        "out_dir_group": "ipsc-tests",
+        "out_dir_group": "ipsc-locuscompare-tests",
 
        "gwas_experiments": 
 	{
