@@ -6,7 +6,7 @@ import time
 
 def main():
     # Reset things fresh on each run, so we're not mixing results
-    subprocess.call("rm -rf /users/mgloud/projects/brain_gwas/output/ipsc-bonus-tests/*", shell=True)
+    subprocess.call("rm -rf /users/mgloud/projects/brain_gwas/output/ipsc-rerun-bonus-tests/*", shell=True)
 
     kept_data = []
     with open("/users/mgloud/projects/ipsc/output/snps_to_test_marcs_bonus_fdr05_window10000.txt") as f:
@@ -44,14 +44,14 @@ def main():
             json.dump(temp, w)
 
         # Run the test
-        subprocess.call("python /users/mgloud/projects/brain_gwas/scripts/dispatch.py /users/mgloud/projects/ipsc/tmp/ipsc_config{0}.config 1 &".format(i), shell=True)
+        subprocess.call("python /users/mgloud/projects/static_coloc_pipeline/scripts/dispatch.py /users/mgloud/projects/ipsc/tmp/ipsc_config{0}.config 1 &".format(i), shell=True)
 
-        while int(subprocess.check_output('''ps -ef | grep "python /users/mgloud/projects/brain_gwas/scripts/dispatch.py /users/mgloud/projects/ipsc/tmp/ipsc_config" | wc -l''', shell=True)) > 8:
+        while int(subprocess.check_output('''ps -ef | grep "python /users/mgloud/projects/static_coloc_pipeline/scripts/dispatch.py /users/mgloud/projects/ipsc/tmp/ipsc_config" | wc -l''', shell=True)) > 3:
             time.sleep(5)
 
 template = '''
 {
-        "out_dir_group": "ipsc-bonus-tests",
+        "out_dir_group": "ipsc-rerun-bonus-tests",
 
        "gwas_experiments": 
 	{

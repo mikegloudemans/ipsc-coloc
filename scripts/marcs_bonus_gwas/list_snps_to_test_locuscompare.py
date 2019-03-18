@@ -66,8 +66,11 @@ def snps_by_threshold(gwas_file, gwas_threshold, trait, window=1000000):
 
     with gzip.open(gwas_file) as f:
         header = f.readline().strip().split()
-
         trait_index = -1
+        if "trait" in header:
+
+            trait_index = header.index("trait")            
+
         pval_index = header.index("pvalue")
         chr_index = header.index("chr")
         snp_pos_index = header.index("snp_pos")
@@ -142,5 +145,5 @@ def get_fdr_cutoffs(pheno_files):
             
 if __name__ == "__main__":
     main()
-                
+
 

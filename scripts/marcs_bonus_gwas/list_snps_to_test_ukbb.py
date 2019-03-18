@@ -34,30 +34,40 @@ def main():
     files = glob.glob("/mnt/lab_data/montgomery/shared/datasets/ukbb/gwas/*.gz")
 
     # Write header
-    with open("/users/mgloud/projects/ipsc/output/snps_to_test_ukbb_fdr05_window10000.txt", "w") as w:
-        w.write("chr\tsnp_pos\tgwas_file\teqtl_file\ttrait\tgwas_pvalue\teqtl_pvalue\tgene\n")
+    for window_size in [0, 10, 100, 1000, 10000]:
+        with open("/users/mgloud/projects/ipsc/output/snps_to_test_ukbb_fdr01_window{0}.txt".format(window_size), "w") as w:
+            w.write("chr\tsnp_pos\tgwas_file\teqtl_file\ttrait\tgwas_pvalue\teqtl_pvalue\tgene\n")
+        with open("/users/mgloud/projects/ipsc/output/snps_to_test_ukbb_fdr05_window{0}.txt".format(window_size), "w") as w:
+            w.write("chr\tsnp_pos\tgwas_file\teqtl_file\ttrait\tgwas_pvalue\teqtl_pvalue\tgene\n")
 
     for file in sorted(files):
 
         info = snps_by_threshold(file, 5e-8, file)
 
-        for snp in info:
-            print snp
+        for window_size in [0, 10, 100, 1000, 10000]:
 
-            for pheno in phenos:
-              
-                wide_matches = subprocess.check_output("tabix {0} {1}:{2}-{3}".format(pheno, snp[0], snp[1]-10000, snp[1]+10000), shell=True)
-                if wide_matches.strip() == "":
-                    continue
-                wide_matches = wide_matches.strip().split("\n")
+            for snp in info:
+                print snp
 
-                matched_05 = set([])     # Don't print repeats if there are multiple matches
-                for match in wide_matches:
-                    data = match.strip().split("\t")
-                    if float(data[7]) <= cutoffs[0][pheno] and data[0] not in matched_05:
-                        with open("/users/mgloud/projects/ipsc/output/snps_to_test_ukbb_fdr05_window10000.txt", "a") as a:
-                            a.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\n".format(snp[0], snp[1], file, pheno, snp[3], snp[2], data[7], data[0]))
-                            matched_05.add(data[0])
+                for pheno in phenos:
+                  
+                    wide_matches = subprocess.check_output("tabix {0} {1}:{2}-{3}".format(pheno, snp[0], snp[1]-window_size, snp[1]+window_size), shell=True)
+                    if wide_matches.strip() == "":
+                        continue
+                    wide_matches = wide_matches.strip().split("\n")
+
+                    matched_05 = set([])     # Don't print repeats if there are multiple matches
+                    matched_01 = set([])     # Don't print repeats if there are multiple matches
+                    for match in wide_matches:
+                        data = match.strip().split("\t")
+                        if float(data[7]) <= cutoffs[0][pheno] and data[0] not in matched_05:
+                            with open("/users/mgloud/projects/ipsc/output/snps_to_test_ukbb_fdr05_window{0}.txt".format(window_size), "a") as a:
+                                a.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\n".format(snp[0], snp[1], file, pheno, snp[3], snp[2], data[7], data[0]))
+                                matched_05.add(data[0])
+                        if float(data[7]) <= cutoffs[1][pheno] and data[0] not in matched_01:
+                            with open("/users/mgloud/projects/ipsc/output/snps_to_test_ukbb_fdr01_window{0}.txt".format(window_size), "a") as a:
+                                a.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\n".format(snp[0], snp[1], file, pheno, snp[3], snp[2], data[7], data[0]))
+                                matched_01.add(data[0])
 
 def snps_by_threshold(gwas_file, gwas_threshold, trait, window=1000000):
 
