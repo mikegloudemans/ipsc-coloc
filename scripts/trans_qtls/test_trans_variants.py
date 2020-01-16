@@ -32,12 +32,15 @@ def main():
             w.write("{0}\t{1}\t{2}\n".format(test[0], test[1], test[4]))
                
         # Add corresponding gwas experiment to the list, if not already present
-        temp["gwas_experiments"][test[3]] = {"ref": "1kgenomes", "gwas_format": "effect_size"}
+        temp["gwas_experiments"][test[3]] = {"ref": "1kgenomes", "gwas_format": "pval_only"}
         if test[3] != test[7]:
             temp["gwas_experiments"][test[3]]["traits"] = [test[7]]
         if "ukbb" in test[3]:
             temp["gwas_experiments"][test[3]]["ref_allele_header"] = "a1"
             temp["gwas_experiments"][test[3]]["alt_allele_header"] = "a2"
+        if "munged" in test[3]:
+            temp["gwas_experiments"][test[3]]["ref_allele_header"] = "non_effect_allele"
+            temp["gwas_experiments"][test[3]]["alt_allele_header"] = "effect_allele"
 
         # Add corresponding eQTL tissue to the list
         temp["eqtl_experiments"][test[2]] = {"ref": "1kgenomes", "eqtl_format": "effect_size"}
@@ -56,7 +59,9 @@ template = '''
 {
         "out_dir_group": "ipsc-trans-tests",
 
-       "gwas_experiments": 
+        "rsid_index_file": "/users/mgloud/projects/index-dbsnp/data/hg19/common_all_20170710.vcf.gz",
+
+        "gwas_experiments": 
 	{
 	},
 	

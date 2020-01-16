@@ -1,0 +1,6 @@
+*.nohup.out
+*.pdf
+../data
+../output
+scripts/old
+../tmp
