@@ -11,15 +11,10 @@ def main():
 
     # Get user-specified parameters
     results_base_dir = sys.argv[1]
-    # "output/colocalization/raw_results/"
     results_specific_dir = sys.argv[2]
-    # "ipsc-bonus-finemap-results/"
     old_results_new_dir = sys.argv[3]
-    # "output/colocalization/old_raw_results/"
     snp_overlap_list = sys.argv[4]
-    # "output/test-snps/ipsc_marcs_extra_*_gwas-pval*_eqtl-pval*_gwas-window*_eqtl-window*_coloc-tests.txt"
     max_threads = int(sys.argv[5])
-    # 3
  
     results_dir = results_base_dir + "/" + results_specific_dir
 
