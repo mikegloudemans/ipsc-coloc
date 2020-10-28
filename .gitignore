@@ -4,3 +4,5 @@ data
 output
 scripts/old
 tmp
+bin
+*.swp
