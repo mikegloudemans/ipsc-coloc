@@ -48,28 +48,22 @@ summary statistics in bulk from these other sources.)
 * The analysis performed in this paper uses an integration of the publicly available tools [FINEMAP](http://www.christianbenner.com/) (Benner et al. 2016)
 and [eCAVIAR](http://zarlab.cs.ucla.edu/tag/ecaviar/) (Hormozdiari et al. 2016). My pipeline that uses these methods is available in a basic form
 at https://bitbucket.org/mgloud/production_coloc_pipeline/src, where you'll find further instructions for setting up the general colocalization analysis
-framework. An extended and hopefully easier-to-use pipeline with a greater variety of options and analyses, closer to what was used for this
-paper, will soon be available at https://github.com/mikegloudemans/ensemble_coloc_pipeline.
+framework. An extended and easier-to-use pipeline with a greater variety of options and analyses will soon be available at https://github.com/mikegloudemans/ensemble_coloc_pipeline.
 * Graphical visualization of colocalizations was performed using [LocusCompare](https://locuscompare.com) (Liu et al. 2019)
 but this tool is not strictly required to reproduce the results in this paper.
 
 ## Required Data
 
-This project makes uses of a variety of data tables, some already publicly available
-and some internally generated. I'm currently exploring ways to just link all or most of the required
-data files here as a single download. Until then, please contact me directly (see _Contact_ section below) and I'll share 
-the relevant files directly, ASAP.
-
-90% of the analysis, including the core colocalization analysis can be completed using just the following
-data files:
+This project makes uses of a variety of data tables. I have linked publicly available
+data hosted on other sites, and provided directions below for obtaining those for which
+I've performed additional processing. If you have trouble accessing any of these data, please 
+contact me directly (see _Contact_ section below) and I'll share the relevant files directly, ASAP.
 
 ### Getting started
-TODO TODO TODO
 
 * eQTL files were obtained through the i2QTL Consortium and should be obtained directly from the owners
 of that project.
 * GWAS summary statistics for the LocusCompare portion of the analysis are publicly available; consistently-formatted versions of these and other GWAS can be [downloaded directly](https://github.com/mikegloudemans/gwas-download).
-
 * An hg38-formatted version of the [1000 Genomes VCF](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/GRCh38_positions/)
 is required for computing allele frequencies in a reference population.
 
